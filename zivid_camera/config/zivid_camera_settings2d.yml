@@ -6,7 +6,7 @@ Settings2D:
     - Acquisition:
         Aperture: 2.83
         Brightness: 1
-        ExposureTime: 10000
+        ExposureTime: 20000
         Gain: 1
   Processing:
     Color:
