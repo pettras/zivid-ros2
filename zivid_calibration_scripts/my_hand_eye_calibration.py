@@ -1,5 +1,6 @@
 from os import listdir
 from os.path import isfile, join, dirname, realpath
+from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import datetime
@@ -8,16 +9,16 @@ import zivid
 
 
 
+
 def get_zdf_path(num):
-    datapath = dirname(realpath(__file__)) + "/data"
-    onlyfiles = [f for f in listdir(datapath) if isfile(join(datapath, f))] #list with all files
+    datapath = dirname(realpath(__file__)) + "/data/"
+    onlyfiles = sorted([f for f in listdir(datapath) if isfile(join(datapath, f))]) #list with all files i sorted order
     zdfFiles = [i for i in onlyfiles if 'zdf' in i] #remove files wothout zdf in name
     print(zdfFiles)
 
     zdfFilesPath=[datapath + s for s in zdfFiles]
-    print(zdfFilesPath)
 
-    return zdfFilesPath[num]
+    return Path(zdfFilesPath[num])
 
 def get_matrix(num):
     with open('data/eef_pos.txt') as f:
@@ -26,8 +27,8 @@ def get_matrix(num):
 
     splitted_line = [float(i) for i in lines[num].split()] #split the line string and convert til float
 
-    euler_angles = splitted_line[0], splitted_line[1], splitted_line[2]
-    pos = (splitted_line[3], splitted_line[4], splitted_line[5])
+    euler_angles = splitted_line[1], splitted_line[2], splitted_line[3]
+    pos = (splitted_line[4], splitted_line[5], splitted_line[6])
 
     rot = R.from_euler('zyx', euler_angles)
     rotmat = rot.as_matrix()
@@ -44,26 +45,6 @@ def get_matrix(num):
             outstr += " " + str(rc)
     return outstr
 
-def _acquire_checkerboard_frame(camera):
-    """Acquire checkerboard frame.
-
-    Args:
-        camera: Zivid camera
-
-    Returns:
-        frame: Zivid frame
-
-    """
-    print("Configuring settings")
-    settings = zivid.Settings()
-    settings.acquisitions.append(zivid.Settings.Acquisition())
-    settings.acquisitions[0].aperture = 8.0
-    settings.acquisitions[0].exposure_time = datetime.timedelta(microseconds=20000)
-    settings.processing.filters.smoothing.gaussian.enabled = True
-    print("Capturing checkerboard image")
-    #TEST1
-    print(camera.capture(settings)) ##
-    return camera.capture(settings)
 
 
 def _enter_robot_pose(index):
@@ -112,8 +93,8 @@ def _main():
 
     app = zivid.Application()
 
-    print("Connecting to camera")
-    camera = app.connect_camera()
+    #print("Connecting to camera")
+    #camera = app.connect_camera()
 
     current_pose_id = 0
     hand_eye_input = []
@@ -124,9 +105,12 @@ def _main():
         if command == "p":
             try:
                 robot_pose = _enter_robot_pose(current_pose_id)
+                path = get_zdf_path(current_pose_id)
+                print("pose_id",current_pose_id)
+                print("thepath", path)
 
-                frame = _acquire_checkerboard_frame(camera)
-
+                frame = zivid.Frame(get_zdf_path(current_pose_id))
+                print("\n FRAME ----------- \n", frame, "\n ------------- \n")
                 print("Detecting checkerboard in point cloud")
                 detection_result = zivid.calibration.detect_feature_points(frame.point_cloud())
 
