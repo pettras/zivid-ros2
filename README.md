@@ -9,3 +9,8 @@ ros2 launch zivid_camera zivid_camera_standalone.launch.py
 ros2 run rviz2 rviz2 -d /home/kukauser/dev_ws/src/zivid-ros2/zivid_camera/rviz/camera_view.rviz 
 
 ros2 run zivid_samples sample_capture 
+
+
+For calibration:
+
+pip install zivid==2.4.0.2.6.0
