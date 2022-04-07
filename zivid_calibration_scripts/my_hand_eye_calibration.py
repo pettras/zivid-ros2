@@ -99,27 +99,64 @@ def _main():
     current_pose_id = 0
     hand_eye_input = []
     calibrate = False
+    
+
+    exclude_loop = True
+    current_pose_id_loop = True
+    exclude_list = []
+
+    with open('data/eef_pos.txt') as f:
+        number_of_lines = len(f.readlines())
+
+    while exclude_loop: 
+        include_cmd = input("Are there any poses you do NOT want to include? y/n:").strip()
+
+        if include_cmd == "y":
+            exclude_str = input("Enter list on form 'a b c ...'").strip()
+            include_list = string.split(exclude_str)
+
+            for i in range(0, len(exclude_list)):
+                exclude_list[i] = int(exclude_list[i])
+            exclude_loop = False
+
+        elif include_cmd == "n":
+            exclude_loop = False
+
+        else: 
+            print(f"Unknown command '{include_command}'")
+
 
     while not calibrate:
+
+        while current_pose_id_loop:
+            if (current_pose_id + 1) in exclude_list:
+                current_pose_id +=1                
+            else: 
+                current_pose_id_loop = False
+
         command = input("Enter command, p (to add robot pose) or c (to perform calibration):").strip()
         if command == "p":
             try:
-                robot_pose = _enter_robot_pose(current_pose_id)
-                path = get_zdf_path(current_pose_id)
-                print("pose_id",current_pose_id)
-                print("thepath", path)
+                if number_of_lines > (current_pose_id) :
 
-                frame = zivid.Frame(get_zdf_path(current_pose_id))
-                print("\n FRAME ----------- \n", frame, "\n ------------- \n")
-                print("Detecting checkerboard in point cloud")
-                detection_result = zivid.calibration.detect_feature_points(frame.point_cloud())
+                    robot_pose = _enter_robot_pose(current_pose_id)
+                    path = get_zdf_path(current_pose_id)
+                    print("pose_id",current_pose_id)
+                    print("thepath", path)
 
-                if detection_result:
-                    print("OK")
-                    hand_eye_input.append(zivid.calibration.HandEyeInput(robot_pose, detection_result))
-                    current_pose_id += 1
+                    frame = zivid.Frame(get_zdf_path(current_pose_id))
+                    print("\n FRAME ----------- \n", frame, "\n ------------- \n")
+                    print("Detecting checkerboard in point cloud")
+                    detection_result = zivid.calibration.detect_feature_points(frame.point_cloud())
+
+                    if detection_result:
+                        print("OK")
+                        hand_eye_input.append(zivid.calibration.HandEyeInput(robot_pose, detection_result))
+                        current_pose_id += 1 
+                    else:
+                        print("FAILED")
                 else:
-                    print("FAILED")
+                    print("FAILED, no more poses")
             except ValueError as ex:
                 print(ex)
         elif command == "c":
