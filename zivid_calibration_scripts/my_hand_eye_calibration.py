@@ -14,7 +14,6 @@ def get_zdf_path(num):
     datapath = dirname(realpath(__file__)) + "/data/"
     onlyfiles = sorted([f for f in listdir(datapath) if isfile(join(datapath, f))]) #list with all files i sorted order
     zdfFiles = [i for i in onlyfiles if 'zdf' in i] #remove files wothout zdf in name
-    print(zdfFiles)
 
     zdfFilesPath=[datapath + s for s in zdfFiles]
 
@@ -23,7 +22,6 @@ def get_zdf_path(num):
 def get_matrix(num):
     with open('data/eef_pos.txt') as f:
         lines = f.readlines()
-    print(lines[0].split())
 
     splitted_line = [float(i) for i in lines[num].split()] #split the line string and convert til float
 
@@ -47,7 +45,7 @@ def get_matrix(num):
 
 
 
-def _enter_robot_pose(index):
+def _enter_robot_pose(num):
     """Robot pose user input.
 
     Args:
@@ -57,12 +55,12 @@ def _enter_robot_pose(index):
         robot_pose: Robot pose
 
     """
-    inputted = get_matrix(index)
+    inputted = get_matrix(num)
 
     elements = inputted.split(maxsplit=15)
     data = np.array(elements, dtype=np.float64).reshape((4, 4))
     robot_pose = zivid.calibration.Pose(data)
-    print(f"The following pose was entered:\n{robot_pose}")
+    print(f"The following pose was entered:\n{robot_pose} \n based of line {num+1} in eef_pos.txt.")
     return robot_pose
 
 
@@ -112,18 +110,16 @@ def _main():
         include_cmd = input("Are there any poses you do NOT want to include? y/n:").strip()
 
         if include_cmd == "y":
-            exclude_str = input("Enter list on form 'a b c ...'").strip()
-            include_list = string.split(exclude_str)
+            exclude_str = input("Enter list on form 'a b c ...': ").strip()
+            exclude_list = [int(i) for i in exclude_str.split()]
 
-            for i in range(0, len(exclude_list)):
-                exclude_list[i] = int(exclude_list[i])
             exclude_loop = False
 
         elif include_cmd == "n":
             exclude_loop = False
 
         else: 
-            print(f"Unknown command '{include_command}'")
+            print(f"Unknown command '{include_cmd}'")
 
 
     while not calibrate:
@@ -140,12 +136,10 @@ def _main():
                 if number_of_lines > (current_pose_id) :
 
                     robot_pose = _enter_robot_pose(current_pose_id)
-                    path = get_zdf_path(current_pose_id)
-                    print("pose_id",current_pose_id)
-                    print("thepath", path)
+                    
+                    print("Including: ", get_zdf_path(current_pose_id))
 
                     frame = zivid.Frame(get_zdf_path(current_pose_id))
-                    print("\n FRAME ----------- \n", frame, "\n ------------- \n")
                     print("Detecting checkerboard in point cloud")
                     detection_result = zivid.calibration.detect_feature_points(frame.point_cloud())
 
