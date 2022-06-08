@@ -2,7 +2,7 @@
 
 This is an unofficial ROS2 driver for [Zivid 3D cameras](https://www.zivid.com/). based of Zivid-ROS1 driver: https://github.com/zivid/zivid-ros
 
-RUN
+### RUN
 
 ros2 launch zivid_camera zivid_camera_standalone.launch.py 
 
